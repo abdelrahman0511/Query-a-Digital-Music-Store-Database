@@ -1,0 +1,79 @@
+/* Query 1: What are the top ten countries that had the most counts of order purchases compared to the total spending? */
+-- -------------------------------------------------------------------------------------------------------------------------
+SELECT i.BillingCountry,
+       count(*) total_counts,
+       sum(i.Total) total_spending
+FROM Invoice i
+JOIN InvoiceLine il ON il.InvoiceId = i.InvoiceId
+GROUP BY 1
+ORDER BY 2 DESC
+LIMIT 10
+_____________________________________________________________________________________________________________________________________
+
+/* Query 2: what are the top states in the top leading country in terms of total counts of order purchases? */
+-- -------------------------------------------------------------------------------------------------------------
+WITH t1 AS
+  (SELECT i.BillingCountry,
+          count(*) total_counts
+   FROM Invoice i
+   JOIN InvoiceLine il ON i.InvoiceId = il.InvoiceId
+   GROUP BY 1
+   ORDER BY 2 DESC
+   LIMIT 1)
+SELECT i.BillingState state,
+       count(*) total_counts
+FROM Invoice i
+JOIN InvoiceLine il ON i.InvoiceId = il.InvoiceId
+WHERE i.BillingCountry =
+    (SELECT BillingCountry
+     FROM t1)
+GROUP BY 1
+ORDER BY 2 DESC
+_____________________________________________________________________________________________________________________________________
+
+/* Query 3: What are the top ten genres in the top spending country? */
+-- -----------------------------------------------------------------------
+WITH t_top_cun AS
+  (SELECT BillingCountry,
+          sum(Total)
+   FROM Invoice
+   GROUP BY 1
+   ORDER BY 2 DESC
+   LIMIT 1)
+SELECT g.Name,
+       count(*) total_counts
+FROM Invoice i
+JOIN InvoiceLine il ON il.InvoiceId = i.InvoiceId
+JOIN Track t ON t.TrackId = il.TrackId
+JOIN Genre g ON g.GenreId = t.GenreId
+JOIN t_top_cun t ON t.BillingCountry = i.BillingCountry
+GROUP BY 1
+ORDER BY 2 DESC
+LIMIT 10
+_____________________________________________________________________________________________________________________________________
+
+/* Query 4: What are the trendings purchases over the years for the top five spending countries? */
+-- ------------------------------------------------------------------------------------------------
+WITH t_top_cun AS
+  (SELECT BillingCountry,
+          sum(Total)
+   FROM Invoice
+   GROUP BY 1
+   ORDER BY 2 DESC
+   LIMIT 5)
+SELECT STRFTIME('%Y', i.InvoiceDate) YEAR,
+                                     i.BillingCountry Country,
+                                     sum(i.Total) Total_spendings
+FROM Invoice i
+JOIN t_top_cun t ON t.BillingCountry = i.BillingCountry
+GROUP BY 1,
+         2
+ORDER BY 1
+
+
+
+
+
+
+
+
