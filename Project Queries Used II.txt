@@ -1,0 +1,71 @@
+/* Query 1: Which employee made the most sales? */
+-- -------------------------------------------------
+
+SELECT e.FirstName,
+       e.LastName,
+       sum(i.Total) Total_sales
+FROM Employee e
+JOIN Customer c ON e.EmployeeId = c.SupportRepId
+JOIN Invoice i ON i.CustomerId = c.CustomerId
+GROUP BY 1,
+         2
+ORDER BY 3 DESC
+
+_____________________________________________________________________________________________________________________________________
+
+/* Query 2: Which artist made the most sales? */
+-- ------------------------------------------------
+
+SELECT ar.Name Artist_Name,
+       count(*)*il.UnitPrice total_sales
+FROM Artist ar
+JOIN Album al ON ar.ArtistId = al.ArtistId
+JOIN Track t ON t.AlbumId = al.AlbumId
+JOIN InvoiceLine il ON il.TrackId = t.TrackId
+GROUP BY 1
+ORDER BY 2 DESC
+LIMIT 10
+
+_____________________________________________________________________________________________________________________________________
+
+/* Query 3: What are the top ten genres in the top spending country? */
+-- -----------------------------------------------------------------------
+WITH t_top_cun AS
+  (SELECT BillingCountry,
+          sum(Total)
+   FROM Invoice
+   GROUP BY 1
+   ORDER BY 2 DESC
+   LIMIT 1)
+SELECT g.Name,
+       count(*) total_counts
+FROM Invoice i
+JOIN InvoiceLine il ON il.InvoiceId = i.InvoiceId
+JOIN Track t ON t.TrackId = il.TrackId
+JOIN Genre g ON g.GenreId = t.GenreId
+JOIN t_top_cun t ON t.BillingCountry = i.BillingCountry
+GROUP BY 1
+ORDER BY 2 DESC
+LIMIT 10
+_____________________________________________________________________________________________________________________________________
+
+/* Query 4: Which country made the most sales in Rock music? */
+-- ---------------------------------------------------------------
+
+SELECT i.BillingCountry Country,
+       count(*)*il.UnitPrice total_sales
+FROM Genre g
+JOIN Track t ON t.GenreId = g.GenreId
+JOIN InvoiceLine il ON il.TrackId = t.TrackId
+JOIN Invoice i ON i.InvoiceId = il.InvoiceId
+WHERE g.Name = 'Rock'
+GROUP BY 1
+ORDER BY 2 DESC
+LIMIT 10
+
+
+
+
+
+
+
